@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>منصة متابعة الأعمال — موسم الحج 1447هـ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<style>
+:root {
+  --green-dark: #1a4a1f;
+  --green-mid: #2d7a35;
+  --green-light: #e8f5e9;
+  --green-text: #1b5e20;
+  --red-dark: #7f1d1d;
+  --red-mid: #c62828;
+  --red-light: #ffebee;
+  --amber-mid: #f59e0b;
+  --amber-light: #fef3c7;
+  --amber-text: #78350f;
+  --blue-mid: #1565c0;
+  --blue-light: #e3f2fd;
+  --blue-text: #0d47a1;
+  --purple-mid: #5e35b1;
+  --purple-light: #ede7f6;
+  --purple-text: #311b92;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-600: #4b5563;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #9ca3af;
+  --border: #e5e7eb;
+  --bg-page: #f0f4f0;
+  --bg-card: #ffffff;
+  --font: 'IBM Plex Sans Arabic', sans-serif;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body { font-family: var(--font); background: var(--bg-page); color: var(--text-primary); min-height: 100vh; }
+
+/* ── HEADER ── */
+.topbar {
+  background: var(--green-dark);
+  padding: 0 2rem;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+  border-bottom: 2px solid var(--green-mid);
+}
+.topbar-title { color: #fff; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+.topbar-title .dot { width: 8px; height: 8px; background: #4caf50; border-radius: 50%; box-shadow: 0 0 6px #4caf50; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.topbar-clock { color: rgba(255,255,255,.75); font-size: 13px; font-variant-numeric: tabular-nums; }
+.topbar-date { color: rgba(255,255,255,.6); font-size: 12px; }
+
+/* ── LAYOUT ── */
+.container { max-width: 1280px; margin: 0 auto; padding: 1.5rem 1.5rem; }
+.page-title { font-size: 13px; color: var(--text-muted); margin-bottom: 1.25rem; }
+
+/* ── KPI STRIP ── */
+.kpi-strip { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 1.5rem; }
+.kpi { background: var(--bg-card); border-radius: var(--radius-md); border: 0.5px solid var(--border); padding: 14px 16px; box-shadow: var(--shadow-sm); }
+.kpi-label { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px; }
+.kpi-val { font-size: 28px; font-weight: 600; line-height: 1; margin-bottom: 4px; }
+.kpi-sub { font-size: 11px; color: var(--text-muted); }
+.kpi-val.green { color: var(--green-mid); }
+.kpi-val.red   { color: var(--red-mid); }
+.kpi-val.blue  { color: var(--blue-mid); }
+
+/* ── SECTION HEADING ── */
+.section-head { font-size: 13px; font-weight: 600; color: var(--gray-800); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.section-head::before { content:''; display:block; width:3px; height:14px; background:var(--green-mid); border-radius:99px; }
+
+/* ── TWO COLUMNS ── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 1.5rem; }
+.three-col { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin-bottom: 1.5rem; }
+.full-col { margin-bottom: 1.5rem; }
+
+/* ── CARD ── */
+.card { background: var(--bg-card); border-radius: var(--radius-lg); border: 0.5px solid var(--border); padding: 16px; box-shadow: var(--shadow-sm); }
+
+/* ── HOTEL CARD ── */
+.hotel-card { background: var(--bg-card); border-radius: var(--radius-lg); border: 0.5px solid var(--border); padding: 16px; box-shadow: var(--shadow-sm); position: relative; overflow: hidden; }
+.hotel-card.approved { border-top: 3px solid var(--green-mid); }
+.hotel-card.excluded { border-top: 3px solid var(--red-mid); }
+.hotel-card.partial  { border-top: 3px solid var(--amber-mid); }
+.hotel-card.closed   { border-top: 3px solid #64748b; background: #f8fafc; opacity: 0.82; }
+.hotel-card.closed .hotel-name { color: #64748b; }
+
+.hotel-name { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
+.hotel-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; padding: 2px 9px; border-radius: 99px; margin-bottom: 12px; font-weight: 500; }
+.badge-approved { background: var(--green-light); color: var(--green-text); }
+.badge-excluded { background: var(--red-light); color: var(--red-dark); }
+
+.hotel-row { display: flex; justify-content: space-between; align-items: center; font-size: 11px; padding: 4px 0; border-bottom: 0.5px solid var(--gray-100); }
+.hotel-row:last-child { border-bottom: none; }
+.hotel-row-label { color: var(--text-muted); }
+.hotel-row-val { font-weight: 500; color: var(--text-primary); }
+.hotel-row-val.ok  { color: var(--green-mid); }
+.hotel-row-val.bad { color: var(--red-mid); }
+
+.rating-section { margin-top: 10px; }
+.rating-label { font-size: 10px; color: var(--text-muted); margin-bottom: 6px; }
+.rating-item { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.rating-name { font-size: 10px; color: var(--text-secondary); width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rating-bar-bg { flex: 1; height: 5px; background: var(--gray-100); border-radius: 99px; overflow: hidden; }
+.rating-bar-fill { height: 100%; border-radius: 99px; }
+.rating-score { font-size: 10px; font-weight: 600; width: 16px; text-align: left; color: var(--text-secondary); }
+
+/* ── ALERTS ── */
+.alert-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: var(--radius-md); margin-bottom: 8px; border: 0.5px solid transparent; }
+.alert-item.overdue  { background: var(--red-light);   border-color: #fca5a5; }
+.alert-item.warn     { background: var(--amber-light); border-color: #fcd34d; }
+.alert-item.upcoming { background: var(--blue-light);  border-color: #93c5fd; }
+.alert-item.done     { background: var(--green-light); border-color: #86efac; }
+.alert-item.sched    { background: var(--gray-50);     border-color: var(--border); }
+.alert-item.critical-left { border-right: 3px solid var(--purple-mid); }
+
+.alert-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; font-weight: 700; }
+.icon-overdue  { background: #fca5a5; color: var(--red-dark); }
+.icon-warn     { background: #fcd34d; color: var(--amber-text); }
+.icon-upcoming { background: #93c5fd; color: var(--blue-dark); }
+.icon-done     { background: #86efac; color: var(--green-text); }
+.icon-sched    { background: var(--gray-200); color: var(--gray-600); }
+
+.alert-body { flex: 1; min-width: 0; }
+.alert-hotel { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+.alert-visit { font-size: 11px; color: var(--text-secondary); margin-top: 1px; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.alert-pills { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+.pill { font-size: 10px; padding: 1px 7px; border-radius: 99px; font-weight: 500; }
+.pill-red    { background: #fca5a5; color: var(--red-dark); }
+.pill-amber  { background: #fcd34d; color: var(--amber-text); }
+.pill-blue   { background: #bfdbfe; color: var(--blue-text); }
+.pill-green  { background: #86efac; color: var(--green-text); }
+.pill-gray   { background: var(--gray-200); color: var(--gray-600); border: 0.5px solid var(--gray-300); }
+.pill-purple { background: var(--purple-light); color: var(--purple-text); }
+
+.alert-badge { font-size: 10px; padding: 2px 8px; border-radius: 99px; flex-shrink: 0; align-self: flex-start; margin-top: 2px; font-weight: 600; }
+.badge-red    { background: #fca5a5; color: var(--red-dark); }
+.badge-amber  { background: #fcd34d; color: var(--amber-text); }
+.badge-blue   { background: #bfdbfe; color: var(--blue-text); }
+.badge-green  { background: #86efac; color: var(--green-text); }
+.badge-gray   { background: var(--gray-200); color: var(--gray-600); }
+
+.crit-tag { font-size: 9px; background: var(--purple-light); color: var(--purple-text); padding: 1px 6px; border-radius: 99px; font-weight: 600; }
+
+/* ── ALERT SUMMARY CHIPS ── */
+.alert-chips { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.a-chip { display: flex; align-items: center; gap: 6px; border-radius: var(--radius-sm); padding: 7px 12px; font-size: 12px; }
+.a-chip .n { font-size: 20px; font-weight: 700; line-height: 1; }
+.chip-r { background: var(--red-light);   color: var(--red-dark); }
+.chip-a { background: var(--amber-light); color: var(--amber-text); }
+.chip-b { background: var(--blue-light);  color: var(--blue-text); }
+.chip-g { background: var(--green-light); color: var(--green-text); }
+
+/* ── MAP ── */
+#map { width: 100%; height: 480px; border-radius: var(--radius-lg); border: 0.5px solid var(--border); }
+.map-legend { display: flex; gap: 16px; margin-top: 10px; flex-wrap: wrap; }
+.map-leg { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary); }
+.map-leg-dot { width: 11px; height: 11px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 1px rgba(0,0,0,.15); }
+
+/* ── CHARTS ── */
+.charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 1.5rem; }
+
+/* ── SIM BAR ── */
+.sim-bar { background: var(--amber-light); border: 0.5px solid #fcd34d; border-radius: var(--radius-md); padding: 10px 14px; display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.sim-bar label { font-size: 12px; color: var(--amber-text); font-weight: 500; }
+.sim-bar input[type=date] { font-size: 12px; border: 0.5px solid #fcd34d; border-radius: var(--radius-sm); padding: 4px 8px; background: #fff; font-family: var(--font); }
+.sim-bar button { font-size: 12px; padding: 4px 12px; border: 0.5px solid var(--amber-text); border-radius: var(--radius-sm); background: transparent; color: var(--amber-text); cursor: pointer; font-family: var(--font); }
+.sim-bar button:hover { background: var(--amber-text); color: #fff; }
+.sim-active-note { font-size: 11px; color: var(--amber-text); margin-right: auto; }
+
+/* ── TIMELINE ── */
+.tl-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 11px; }
+.tl-hotel { width: 130px; color: var(--text-secondary); text-align: right; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tl-area { flex: 1; position: relative; height: 26px; }
+.tl-bar { position: absolute; height: 18px; top: 4px; border-radius: 4px; display: flex; align-items: center; padding: 0 6px; font-size: 10px; white-space: nowrap; overflow: hidden; color: white; font-weight: 500; }
+
+/* ── FOOTER ── */
+.footer { text-align: center; padding: 2rem 0 1.5rem; font-size: 11px; color: var(--text-muted); }
+
+/* ── FILTERS ── */
+.filter-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.filter-btn { font-size: 12px; padding: 5px 14px; border-radius: 99px; border: 0.5px solid var(--border); background: var(--bg-card); color: var(--text-secondary); cursor: pointer; font-family: var(--font); transition: all .15s; white-space: nowrap; }
+.filter-btn:hover { border-color: var(--green-mid); color: var(--green-mid); }
+.filter-btn.active { background: var(--green-mid); color: #fff; border-color: var(--green-mid); font-weight: 600; }
+.filter-btn.active.red { background: var(--red-mid); border-color: var(--red-mid); }
+.filter-btn.active.blue { background: var(--blue-mid); border-color: var(--blue-mid); }
+.filter-sep { width: 1px; height: 22px; background: var(--border); margin: 0 4px; }
+.filter-label { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+.hotel-card.hidden { display: none; }
+.no-results { font-size: 13px; color: var(--text-muted); padding: 2rem; text-align: center; grid-column: 1/-1; }
+
+/* ── MISSIONS ── */
+.mission-alert { display:flex; align-items:flex-start; gap:10px; padding:11px 13px; border-radius:var(--radius-md); margin-bottom:8px; border:0.5px solid transparent; position:relative; }
+.mission-alert.critical  { background:#fff7ed; border-color:#fdba74; }
+.mission-alert.tomorrow  { background:#fefce8; border-color:#fde047; }
+.mission-alert.soon      { background:#eff6ff; border-color:#93c5fd; }
+.mission-alert.arrived   { background:#f0fdf4; border-color:#86efac; }
+.mission-alert.future    { background:var(--gray-50); border-color:var(--border); }
+.mission-alert.hotel-bad { border-right:3px solid var(--red-mid); }
+.mission-alert.hotel-ok  { border-right:3px solid var(--green-mid); }
+.m-icon { width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; font-weight:700; }
+.m-body { flex:1; min-width:0; }
+.m-name { font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:2px; }
+.m-meta { font-size:11px; color:var(--text-secondary); margin-bottom:5px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+.m-pills { display:flex; flex-wrap:wrap; gap:5px; }
+.m-pill { font-size:10px; padding:2px 8px; border-radius:99px; font-weight:500; }
+.mp-green  { background:#bbf7d0; color:#14532d; }
+.mp-red    { background:#fecaca; color:#7f1d1d; }
+.mp-amber  { background:#fde68a; color:#78350f; }
+.mp-blue   { background:#bfdbfe; color:#1e3a5f; }
+.mp-gray   { background:var(--gray-200); color:var(--gray-600); }
+.mp-orange { background:#fed7aa; color:#7c2d12; }
+.mp-purple { background:#ede9fe; color:#4c1d95; }
+.m-badge { font-size:10px; padding:2px 9px; border-radius:99px; flex-shrink:0; align-self:flex-start; margin-top:2px; font-weight:600; }
+.mb-critical { background:#fed7aa; color:#7c2d12; }
+.mb-tomorrow { background:#fde68a; color:#78350f; }
+.mb-soon     { background:#bfdbfe; color:#1e3a5f; }
+.mb-arrived  { background:#bbf7d0; color:#14532d; }
+.mb-future   { background:var(--gray-200); color:var(--gray-600); }
+.hotel-status-banner { display:inline-flex; align-items:center; gap:4px; font-size:10px; padding:2px 8px; border-radius:99px; font-weight:600; margin-right:4px; }
+.hsb-ok  { background:#d1fae5; color:#064e3b; }
+.hsb-bad { background:#fee2e2; color:#7f1d1d; }
+
+/* ── MODAL ── */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:999; align-items:center; justify-content:center; padding:1rem; }
+.modal-overlay.open { display:flex; }
+.modal-box { background:var(--bg-card); border-radius:var(--radius-lg); width:100%; max-width:640px; max-height:85vh; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,0.25); }
+.modal-header { padding:16px 20px; border-bottom:0.5px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+.modal-title { font-size:15px; font-weight:600; color:var(--text-primary); }
+.modal-sub { font-size:11px; color:var(--text-muted); margin-top:2px; }
+.modal-close { width:28px; height:28px; border-radius:50%; border:0.5px solid var(--border); background:transparent; cursor:pointer; font-size:16px; color:var(--text-secondary); display:flex; align-items:center; justify-content:center; font-family:var(--font); }
+.modal-close:hover { background:var(--gray-100); }
+.modal-body { padding:16px 20px; overflow-y:auto; flex:1; }
+.modal-search { width:100%; padding:8px 12px; border:0.5px solid var(--border); border-radius:var(--radius-md); font-size:13px; font-family:var(--font); margin-bottom:12px; background:var(--bg-card); color:var(--text-primary); }
+.modal-search:focus { outline:none; border-color:var(--green-mid); }
+.pilgrim-table { width:100%; border-collapse:collapse; font-size:12px; }
+.pilgrim-table th { background:var(--gray-50); padding:8px 10px; text-align:right; font-weight:600; color:var(--text-secondary); border-bottom:0.5px solid var(--border); font-size:11px; }
+.pilgrim-table td { padding:7px 10px; border-bottom:0.5px solid var(--gray-100); color:var(--text-primary); }
+.pilgrim-table tr:last-child td { border-bottom:none; }
+.pilgrim-table tr:hover td { background:var(--gray-50); }
+.pilgrim-num { color:var(--text-muted); font-size:10px; }
+.nat-badge { font-size:10px; padding:1px 7px; border-radius:99px; background:var(--purple-light); color:var(--purple-text); }
+.clickable-card { cursor:pointer; transition:box-shadow .15s, transform .12s; }
+.clickable-card:hover { box-shadow:var(--shadow-md); transform:translateY(-1px); }
+.click-hint { font-size:10px; color:var(--text-muted); margin-top:8px; display:flex; align-items:center; gap:4px; }
+
+/* ── ACTION MENU ── */
+.action-menu-overlay { display:none; position:fixed; inset:0; z-index:998; pointer-events:none; }
+.action-menu-overlay.open { display:block; pointer-events:all; }
+.action-menu { position:fixed; background:var(--bg-card); border-radius:var(--radius-lg); border:0.5px solid var(--border); box-shadow:0 8px 32px rgba(0,0,0,0.18); min-width:270px; z-index:1000; overflow:hidden; }
+.action-menu-header { padding:12px 16px; border-bottom:0.5px solid var(--border); background:var(--gray-50); }
+.action-menu-title { font-size:13px; font-weight:600; color:var(--text-primary); }
+.action-menu-sub { font-size:11px; color:var(--text-muted); margin-top:2px; }
+.action-item { display:flex; align-items:center; gap:12px; padding:13px 16px; cursor:pointer; transition:background .12s; border-bottom:0.5px solid var(--gray-100); text-decoration:none; }
+.action-item:last-child { border-bottom:none; }
+.action-item:hover { background:var(--gray-50); }
+.action-icon { width:34px; height:34px; border-radius:var(--radius-md); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:16px; }
+.action-icon.green  { background:#d1fae5; }
+.action-icon.blue   { background:#dbeafe; }
+.action-icon.purple { background:#ede9fe; }
+.action-body { flex:1; }
+.action-label { font-size:13px; font-weight:500; color:var(--text-primary); }
+.action-desc  { font-size:11px; color:var(--text-muted); margin-top:1px; }
+
+/* coordinator card inside modal */
+.coord-card { background:var(--gray-50); border:0.5px solid var(--border); border-radius:var(--radius-md); padding:14px 16px; display:flex; align-items:center; gap:14px; }
+.coord-avatar { width:44px; height:44px; border-radius:50%; background:#dbeafe; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:600; color:#1565c0; flex-shrink:0; }
+.coord-name { font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:4px; }
+.coord-phone { font-size:20px; font-weight:700; color:var(--green-mid); font-variant-numeric:tabular-nums; direction:ltr; text-align:right; }
+.coord-phone-label { font-size:11px; color:var(--text-muted); margin-bottom:2px; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .kpi-strip { grid-template-columns: repeat(2,1fr); }
+  .two-col, .charts-row { grid-template-columns: 1fr; }
+  .three-col { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 600px) {
+  .three-col { grid-template-columns: 1fr; }
+  .kpi-strip { grid-template-columns: 1fr 1fr; }
+  .container { padding: 1rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-title">
+    <div class="dot"></div>
+    منصة متابعة الأعمال — شركة إكرام الضيف | المدينة المنورة | موسم الحج 1447هـ
+  </div>
+  <div class="topbar-right">
+    <div class="topbar-date" id="hdr-date"></div>
+    <div class="topbar-clock" id="hdr-clock"></div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="page-title">شركة إكرام الضيف | متابعة جاهزية الفنادق — موسم الحج 1447هـ</div>
+
+  <!-- KPI STRIP -->
+  <div class="kpi-strip">
+    <div class="kpi">
+      <div class="kpi-label">إجمالي الفنادق</div>
+      <div class="kpi-val blue">3</div>
+      <div class="kpi-sub">تحت المتابعة</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">معتمد ومطابق</div>
+      <div class="kpi-val green">2</div>
+      <div class="kpi-sub">67% من الإجمالي</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">مستبعد / غير مطابق</div>
+      <div class="kpi-val red">1</div>
+      <div class="kpi-sub">33% من الإجمالي</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">متوسط أيام الإقامة</div>
+      <div class="kpi-val" style="color:var(--purple-mid)">16</div>
+      <div class="kpi-sub">للفنادق المعتمدة</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">إجمالي البعثات</div>
+      <div class="kpi-val" style="color:var(--purple-mid)">3</div>
+      <div class="kpi-sub">بعثة مسجلة</div>
+    </div>
+    <div class="kpi" style="cursor:pointer;" onclick="openModalAll()" title="اضغط لعرض كل الحجاج">
+      <div class="kpi-label">إجمالي الحجاج المسجلين</div>
+      <div class="kpi-val" style="color:var(--green-mid)">32</div>
+      <div class="kpi-sub">اضغط لعرض القائمة الكاملة ↗</div>
+    </div>
+  </div>
+
+  <!-- HOTEL CARDS -->
+  <div class="section-head">بطاقات الفنادق</div>
+  <div class="filter-bar">
+    <span class="filter-label">النتيجة النهائية:</span>
+    <button class="filter-btn active" onclick="setFilter('result','all',this)">الكل</button>
+    <button class="filter-btn" onclick="setFilter('result','approved',this)">مطابق ومعتمد</button>
+    <button class="filter-btn" onclick="setFilter('result','excluded',this)">غير مطابق / مستبعد</button>
+    <div class="filter-sep"></div>
+    <span class="filter-label">الحجاج:</span>
+    <button class="filter-btn active blue" id="btn-occupied" onclick="setFilter('occupied','yes',this)">فيه حجاج الآن</button>
+    <button class="filter-btn" onclick="setFilter('occupied','no',this)">لم يصل بعد</button>
+    <button class="filter-btn" onclick="setFilter('occupied','departed',this)">تم مغادرة الحجاج</button>
+    <button class="filter-btn" onclick="setFilter('occupied','all2',this)">الكل</button>
+  </div>
+  <div class="three-col" id="hotel-cards"></div>
+  <div id="no-results" style="display:none;" class="no-results">لا توجد فنادق تطابق الفلتر المحدد</div>
+
+  <!-- ALERTS -->
+  <div class="section-head">تنبيهات الزيارات</div>
+  <div class="sim-bar">
+    <label>محاكاة التاريخ:</label>
+    <input type="date" id="sim-date" onchange="simChanged(this.value)"/>
+    <button onclick="resetSim()">إعادة تعيين</button>
+    <span class="sim-active-note" id="sim-note"></span>
+  </div>
+  <div class="alert-chips" id="alert-chips"></div>
+  <div class="card" style="padding:12px;">
+    <div id="alerts-list"></div>
+  </div>
+
+  <!-- MISSIONS -->
+  <div class="section-head" style="margin-top:1.5rem;">تنبيهات استقبال البعثات</div>
+  <div class="alert-chips" id="mission-chips"></div>
+  <div class="card" style="padding:12px;">
+    <div id="missions-list"></div>
+  </div>
+
+  <!-- MISSION CHART -->
+  <div class="card full-col" style="margin-top:1.5rem;padding:16px;">
+    <div class="section-head" style="margin-bottom:12px;">توزيع الحجاج على البعثات</div>
+    <div style="position:relative;height:240px;">
+      <canvas id="missionChart" role="img" aria-label="توزيع الحجاج على البعثات"></canvas>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="charts-row" style="margin-top:1.5rem;">
+    <div class="card">
+      <div class="section-head" style="margin-bottom:10px;">متوسط التقييم لكل فندق</div>
+      <div style="position:relative;height:200px;">
+        <canvas id="avgChart" role="img" aria-label="متوسط تقييم الفنادق"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-head" style="margin-bottom:10px;">توزيع نتائج الزيارات</div>
+      <div style="display:flex;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+        <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-secondary);">
+          <span style="width:10px;height:10px;border-radius:2px;background:#2d7a35;display:inline-block;"></span>مطابق
+        </span>
+        <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-secondary);">
+          <span style="width:10px;height:10px;border-radius:2px;background:#c62828;display:inline-block;"></span>غير مطابق / مستبعد
+        </span>
+      </div>
+      <div style="position:relative;height:175px;">
+        <canvas id="pieChart" role="img" aria-label="توزيع نتائج الزيارات"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="card full-col">
+    <div class="section-head" style="margin-bottom:12px;">الجدول الزمني للزيارات والتسكين (أبريل — مايو 2026)</div>
+    <div style="display:flex;gap:14px;margin-bottom:10px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-secondary);">
+        <div style="width:12px;height:12px;border-radius:2px;background:#1565c0;"></div>زيارة نسك مزار
+      </div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-secondary);">
+        <div style="width:12px;height:12px;border-radius:2px;background:#2d7a35;"></div>فترة الإقامة
+      </div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-secondary);">
+        <div style="width:12px;height:12px;border-radius:2px;background:#c62828;"></div>مستبعد
+      </div>
+    </div>
+    <div id="timeline-rows"></div>
+  </div>
+
+  <!-- MAP -->
+  <div class="section-head">خريطة الفنادق — المدينة المنورة</div>
+  <div class="card" style="padding:12px;">
+    <div id="map"></div>
+    <div class="map-legend" style="margin-top:10px;">
+      <div class="map-leg"><div class="map-leg-dot" style="background:#2d7a35;"></div>معتمد ومطابق</div>
+      <div class="map-leg"><div class="map-leg-dot" style="background:#c62828;"></div>غير مطابق / مستبعد</div>
+      <div class="map-leg"><div style="width:11px;height:11px;border-radius:2px;background:#f59e0b;"></div>تنبيه: زيارة إلزامية قريبة</div>
+    </div>
+  </div>
+
+  <div class="footer">منصة متابعة الأعمال — موسم الحج 1447هـ | شركة إكرام الضيف</div>
+</div>
+
+<!-- SCRIPTS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+// ═══════════════════════════════
+// DATA
+// ═══════════════════════════════
+const hotels = [
+  {
+    id: 1,
+    name: 'فندق إيلاف طيبة',
+    lat: 24.471202, lng: 39.60682,
+    approved: true,
+    finalResult: 'مطابق ومعتمد',
+    visit1Result: 'غير مطابق',
+    visit2Result: 'مطابق',
+    arrivalDate: '2026-04-20',
+    closingDate: '2026-05-05',
+    stayDays: 15,
+    lat: 24.471202, lng: 39.60682,
+    nationalities: 'بنغلادش',
+    pilgrims: 50,
+    ratings: { staff: 3, access: 4, response: 5, readiness: 2 },
+    visits: [
+      { label:'الزيارة الأولى',           scheduled:'2026-04-17', actual:'2026-04-17', critical:false },
+      { label:'الزيارة الثانية',          scheduled:'2026-04-19', actual:'2026-04-19', critical:false },
+      { label:'الزيارة الدورية الإلزامية',scheduled:'2026-04-22', actual:null,         critical:true  },
+      { label:'زيارة الإغلاق',            scheduled:'2026-05-05', actual:null,         critical:true  },
+    ]
+  },
+  {
+    id: 2,
+    name: 'فندق راما مدينة',
+    lat: 24.463829, lng: 39.609369,
+    approved: true,
+    finalResult: 'مطابق ومعتمد',
+    visit1Result: 'مطابق',
+    visit2Result: '—',
+    arrivalDate: '2026-04-22',
+    closingDate: '2026-05-09',
+    stayDays: 17,
+    nationalities: 'مصر — موريتانيا',
+    pilgrims: 70,
+    ratings: { staff: 4, access: 5, response: 5, readiness: 4 },
+    visits: [
+      { label:'الزيارة الأولى',           scheduled:'2026-04-19', actual:'2026-04-20', critical:false },
+      { label:'الزيارة الدورية الإلزامية',scheduled:'2026-04-24', actual:null,         critical:true  },
+      { label:'زيارة الإغلاق',            scheduled:'2026-05-09', actual:null,         critical:true  },
+    ]
+  },
+  {
+    id: 3,
+    name: 'فندق لؤلؤة المدينة',
+    lat: 24.465165, lng: 39.60416,
+    approved: false,
+    finalResult: 'غير مطابق ومستبعد',
+    visit1Result: 'مستبعد',
+    visit2Result: 'مستبعد',
+    arrivalDate: null,
+    closingDate: null,
+    stayDays: 0,
+    nationalities: '—',
+    pilgrims: 0,
+    ratings: { staff: 2, access: 1, response: 1, readiness: 1 },
+    visits: []
+  }
+];
+
+// ═══════════════════════════════
+// MISSIONS DATA
+// ═══════════════════════════════
+const missions = [
+  {
+    id: 1,
+    name: 'بعثة داكا',
+    arrival: 'المطار',
+    hotelName: 'فندق إيلاف طيبة',
+    scheduledDate: '2026-04-20',
+    actualDate: '2026-04-20',
+    nationality: 'بنغلادش',
+    count: 50,
+    stayDays: 15
+  },
+  {
+    id: 2,
+    name: 'بعثة مصر',
+    arrival: 'القطار',
+    hotelName: 'فندق راما مدينة',
+    scheduledDate: '2026-04-21',
+    actualDate: '2026-04-21',
+    nationality: 'مصر',
+    count: 70,
+    stayDays: 17
+  },
+  {
+    id: 3,
+    name: 'بعثة موريتانيا',
+    arrival: 'القطار',
+    hotelName: 'فندق راما مدينة',
+    scheduledDate: '2026-04-24',
+    actualDate: '2026-04-25',
+    nationality: 'موريتانيا',
+    count: 90,
+    stayDays: 21
+  }
+];
+
+const coordinators = [
+  { missionId:1, missionName:'بعثة داكا',     nationality:'بنغلادش', name:'USAMA YEHIA',    phone:'54667777' },
+  { missionId:2, missionName:'بعثة مصر',      nationality:'مصر',     name:'MOURAD MOHAMED', phone:'56979868' },
+  { missionId:3, missionName:'بعثة موريتانيا',nationality:'موريتانيا',name:'SALAH ELDEIN',   phone:'53544332' },
+];
+
+const pilgrims = [
+  { missionId:1, missionName:'بعثة داكا',     nationality:'بنغلادش', name:'SAYED HUSSAIN',    passport:'A23444' },
+  { missionId:1, missionName:'بعثة داكا',     nationality:'بنغلادش', name:'SAYED HUSSAIN 2',  passport:'A23445' },
+  { missionId:1, missionName:'بعثة داكا',     nationality:'بنغلادش', name:'SAYED HUSSAIN 3',  passport:'A23446' },
+  { missionId:1, missionName:'بعثة داكا',     nationality:'بنغلادش', name:'SAYED HUSSAIN 4',  passport:'A23447' },
+  { missionId:1, missionName:'بعثة داكا',     nationality:'بنغلادش', name:'SAYED HUSSAIN 5',  passport:'A23448' },
+  { missionId:1, missionName:'بعثة داكا',     nationality:'بنغلادش', name:'SAYED HUSSAIN 6',  passport:'A23449' },
+  { missionId:1, missionName:'بعثة داكا',     nationality:'بنغلادش', name:'SAYED HUSSAIN 7',  passport:'A23450' },
+  { missionId:1, missionName:'بعثة داكا',     nationality:'بنغلادش', name:'SAYED HUSSAIN 8',  passport:'A23451' },
+  { missionId:1, missionName:'بعثة داكا',     nationality:'بنغلادش', name:'SAYED HUSSAIN 9',  passport:'A23452' },
+  { missionId:1, missionName:'بعثة داكا',     nationality:'بنغلادش', name:'SAYED HUSSAIN 10', passport:'A23453' },
+  { missionId:1, missionName:'بعثة داكا',     nationality:'بنغلادش', name:'SAYED HUSSAIN 11', passport:'A23454' },
+  { missionId:2, missionName:'بعثة مصر',      nationality:'مصر',     name:'MAHMOUD AHMED',    passport:'A565544' },
+  { missionId:2, missionName:'بعثة مصر',      nationality:'مصر',     name:'MAHMOUD AHMED 2',  passport:'A565545' },
+  { missionId:2, missionName:'بعثة مصر',      nationality:'مصر',     name:'MAHMOUD AHMED 3',  passport:'A565546' },
+  { missionId:2, missionName:'بعثة مصر',      nationality:'مصر',     name:'MAHMOUD AHMED 4',  passport:'A565547' },
+  { missionId:2, missionName:'بعثة مصر',      nationality:'مصر',     name:'MAHMOUD AHMED 5',  passport:'A565548' },
+  { missionId:2, missionName:'بعثة مصر',      nationality:'مصر',     name:'MAHMOUD AHMED',    passport:'A565549' },
+  { missionId:2, missionName:'بعثة مصر',      nationality:'مصر',     name:'MAHMOUD AHMED 6',  passport:'A565550' },
+  { missionId:2, missionName:'بعثة مصر',      nationality:'مصر',     name:'MAHMOUD AHMED 7',  passport:'A565551' },
+  { missionId:2, missionName:'بعثة مصر',      nationality:'مصر',     name:'MAHMOUD AHMED 8',  passport:'A565552' },
+  { missionId:2, missionName:'بعثة مصر',      nationality:'مصر',     name:'MAHMOUD AHMED 9',  passport:'A565553' },
+  { missionId:2, missionName:'بعثة مصر',      nationality:'مصر',     name:'MAHMOUD AHMED',    passport:'A565554' },
+  { missionId:2, missionName:'بعثة مصر',      nationality:'مصر',     name:'MAHMOUD AHMED 10', passport:'A565555' },
+  { missionId:2, missionName:'بعثة مصر',      nationality:'مصر',     name:'MAHMOUD AHMED 11', passport:'A565556' },
+  { missionId:3, missionName:'بعثة موريتانيا',nationality:'موريتانيا',name:'SHEKH KARAM',      passport:'M775433' },
+  { missionId:3, missionName:'بعثة موريتانيا',nationality:'موريتانيا',name:'SHEKH KARAM 2',    passport:'M775434' },
+  { missionId:3, missionName:'بعثة موريتانيا',nationality:'موريتانيا',name:'SHEKH KARAM 3',    passport:'M775435' },
+  { missionId:3, missionName:'بعثة موريتانيا',nationality:'موريتانيا',name:'SHEKH KARAM 4',    passport:'M775436' },
+  { missionId:3, missionName:'بعثة موريتانيا',nationality:'موريتانيا',name:'SHEKH KARAM 5',    passport:'M775437' },
+  { missionId:3, missionName:'بعثة موريتانيا',nationality:'موريتانيا',name:'SHEKH KARAM 6',    passport:'M775438' },
+  { missionId:3, missionName:'بعثة موريتانيا',nationality:'موريتانيا',name:'SHEKH KARAM 7',    passport:'M775439' },
+  { missionId:3, missionName:'بعثة موريتانيا',nationality:'موريتانيا',name:'SHEKH KARAM 8',    passport:'M775440' },
+];
+
+function getHotelForMission(m) {
+  return hotels.find(h => h.name === m.hotelName) || null;
+}
+
+// ═══════════════════════════════
+// HELPERS
+// ═══════════════════════════════
+let simDateStr = null;
+
+function getToday() {
+  const d = simDateStr ? new Date(simDateStr) : new Date();
+  d.setHours(0,0,0,0); return d;
+}
+function diffDays(a,b) { return Math.round((b-a)/86400000); }
+function arDate(s) {
+  if (!s) return '—';
+  return new Date(s).toLocaleDateString('ar-SA-u-ca-gregory',{day:'numeric',month:'long',year:'numeric'});
+}
+function ratingColor(v) {
+  if (v >= 4) return '#2d7a35';
+  if (v >= 3) return '#f59e0b';
+  return '#c62828';
+}
+function getNextVisit(h) {
+  const today = getToday();
+  let next = null;
+  h.visits.forEach(v => {
+    if (!v.scheduled || v.actual) return;
+    const d = new Date(v.scheduled); d.setHours(0,0,0,0);
+    if (!next || d < new Date(next.scheduled)) next = v;
+  });
+  return next;
+}
+
+// ═══════════════════════════════
+// HOTEL CARDS
+// ═══════════════════════════════
+// ═══════════════════════════════
+// FILTERS
+// ═══════════════════════════════
+let activeResultFilter = 'all';
+let activeOccupiedFilter = 'all2';
+
+function setFilter(type, val, btn) {
+  if (type === 'result') {
+    activeResultFilter = val;
+    document.querySelectorAll('.filter-bar .filter-btn').forEach(b => {
+      if (['all','approved','excluded'].some(v => b.getAttribute('onclick') && b.getAttribute('onclick').includes("'result','"+v))) {
+        b.classList.remove('active','red');
+      }
+    });
+    btn.classList.add('active');
+    if (val === 'excluded') btn.classList.add('red');
+  } else {
+    activeOccupiedFilter = val;
+    document.querySelectorAll('.filter-bar .filter-btn').forEach(b => {
+      if (['yes','no','all2'].some(v => b.getAttribute('onclick') && b.getAttribute('onclick').includes("'occupied','"+v))) {
+        b.classList.remove('active','blue');
+      }
+    });
+    btn.classList.add('active');
+    if (val === 'yes') btn.classList.add('blue');
+  }
+  applyFilters();
+}
+
+function isOccupiedNow(h) {
+  if (!h.approved || !h.arrivalDate || !h.closingDate) return false;
+  const today = getToday();
+  const arr = new Date(h.arrivalDate); arr.setHours(0,0,0,0);
+  const cls = new Date(h.closingDate); cls.setHours(0,0,0,0);
+  return today >= arr && today <= cls;
+}
+
+function isDeparted(h) {
+  if (!h.approved || !h.closingDate) return false;
+  const today = getToday();
+  const cls = new Date(h.closingDate); cls.setHours(0,0,0,0);
+  return today > cls;
+}
+
+function hotelMatchesFilter(h) {
+  let show = true;
+  if (activeResultFilter === 'approved' && !h.approved) show = false;
+  if (activeResultFilter === 'excluded' && h.approved) show = false;
+  if (activeOccupiedFilter === 'yes' && !isOccupiedNow(h)) show = false;
+  if (activeOccupiedFilter === 'no' && (isOccupiedNow(h) || isDeparted(h))) show = false;
+  if (activeOccupiedFilter === 'departed' && !isDeparted(h)) show = false;
+  return show;
+}
+
+function applyFilters() {
+  const cards = document.querySelectorAll('#hotel-cards .hotel-card');
+  let visible = 0;
+  cards.forEach((card, i) => {
+    const show = hotelMatchesFilter(hotels[i]);
+    card.classList.toggle('hidden', !show);
+    if (show) visible++;
+  });
+  const noRes = document.getElementById('no-results');
+  if (noRes) noRes.style.display = visible === 0 ? 'block' : 'none';
+  updateMapFilter();
+}
+
+function updateMapFilter() {
+  if (!mapInstance) return;
+  mapInstance.eachLayer(l => {
+    if (l instanceof L.Marker) mapInstance.removeLayer(l);
+  });
+  const today = getToday();
+  hotels.forEach((h, i) => {
+    const visible = hotelMatchesFilter(h);
+    const color    = h.approved ? '#2d7a35' : '#c62828';
+    const bgLight  = h.approved ? '#e8f5e9' : '#ffebee';
+    const textDark = h.approved ? '#1b5e20' : '#7f1d1d';
+    const next = getNextVisit(h);
+    let nextDiff = null;
+    if (next) { const nd=new Date(next.scheduled); nd.setHours(0,0,0,0); nextDiff=diffDays(today,nd); }
+    const warn = next && nextDiff !== null && nextDiff <= 1 && !next.actual;
+    const warnBadge = warn ? '<circle cx="26" cy="6" r="6" fill="#f59e0b" stroke="white" stroke-width="1.5"/><text x="26" y="10.5" text-anchor="middle" font-size="10" fill="white" font-weight="bold">!</text>' : '';
+    const opacity = visible ? 1 : 0.2;
+    const markerSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="34" height="44" viewBox="0 0 34 44" style="opacity:'+opacity+'">'
+      + '<ellipse cx="17" cy="42" rx="5" ry="2" fill="rgba(0,0,0,0.2)"/>'
+      + '<path d="M17 2C8.7 2 2 8.7 2 17c0 10 15 27 15 27s15-17 15-27C32 8.7 25.3 2 17 2Z" fill="'+color+'" stroke="white" stroke-width="2"/>'
+      + '<circle cx="17" cy="17" r="7" fill="white" opacity="0.92"/>'
+      + '<text x="17" y="21" text-anchor="middle" font-size="11" font-weight="bold" fill="'+color+'" font-family="Arial">'+(h.approved?'✓':'✕')+'</text>'
+      + warnBadge
+      + '</svg>';
+    const icon = L.divIcon({ html:markerSvg, iconSize:[34,44], iconAnchor:[17,44], popupAnchor:[0,-44], className:'' });
+    let nextBlock = '';
+    if (next) {
+      const nd2 = new Date(next.scheduled); nd2.setHours(0,0,0,0);
+      const d2 = diffDays(today, nd2);
+      const nc = d2<0?'#c62828': d2<=1?'#f59e0b': d2<=3?'#1565c0':'#2d7a35';
+      const nl = d2<0?'تأخرت '+Math.abs(d2)+' يوم': d2===0?'اليوم': d2===1?'غداً':'بعد '+d2+' يوم';
+      nextBlock = '<div style="background:'+nc+'18;border:1px solid '+nc+'44;border-radius:8px;padding:7px 9px;margin-bottom:7px;">'
+        + '<div style="font-size:10px;color:#666;margin-bottom:2px;">أقرب زيارة قادمة</div>'
+        + '<div style="font-size:12px;font-weight:700;color:'+nc+';">'+next.label+'</div>'
+        + '<div style="font-size:10px;color:#444;">'+arDate(next.scheduled)+' — '+nl+'</div>'
+        + '</div>';
+    } else {
+      nextBlock = '<div style="background:#f5f5f5;border-radius:8px;padding:7px 9px;margin-bottom:7px;font-size:11px;color:#999;">لا توجد زيارات قادمة</div>';
+    }
+    const mapsUrl = 'https://www.google.com/maps?q='+h.lat+','+h.lng;
+    const popup = '<div style="direction:rtl;font-family:Arial,sans-serif;min-width:230px;max-width:270px;">'
+      + '<div style="background:'+bgLight+';border-radius:8px 8px 0 0;padding:9px 11px;border-bottom:1px solid '+color+'44;margin:-12px -20px 10px;">'
+      + '<div style="font-size:14px;font-weight:700;color:'+textDark+';">'+h.name+'</div>'
+      + '<span style="font-size:10px;background:'+color+';color:white;padding:2px 8px;border-radius:99px;margin-top:4px;display:inline-block;">'+h.finalResult+'</span>'
+      + '</div>'
+      + nextBlock
+      + '<table style="width:100%;font-size:11px;border-collapse:collapse;">'
+      + '<tr><td style="color:#888;padding:3px 0;border-bottom:1px solid #eee;">الجنسيات</td><td style="text-align:left;font-weight:600;color:#222;">'+h.nationalities+'</td></tr>'
+      + '<tr><td style="color:#888;padding:3px 0;border-bottom:1px solid #eee;">عدد الزوار</td><td style="text-align:left;font-weight:700;color:#1565c0;">'+(h.pilgrims?h.pilgrims.toLocaleString('ar-EG')+' حاج':'—')+'</td></tr>'
+      + '<tr><td style="color:#888;padding:3px 0;border-bottom:1px solid #eee;">وصول الحجاج</td><td style="text-align:left;font-weight:600;color:#222;">'+arDate(h.arrivalDate)+'</td></tr>'
+      + '<tr><td style="color:#888;padding:3px 0;border-bottom:1px solid #eee;">تاريخ الإغلاق</td><td style="text-align:left;font-weight:600;color:#222;">'+arDate(h.closingDate)+'</td></tr>'
+      + '</table>'
+      + '<a href="'+mapsUrl+'" target="_blank" style="display:flex;align-items:center;gap:5px;margin-top:8px;font-size:11px;color:#1565c0;text-decoration:none;padding:5px 8px;border:0.5px solid #bfdbfe;border-radius:6px;background:#eff6ff;">'
+      + '<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>'
+      + 'فتح في خرائط جوجل</a>'
+      + '</div>';
+    L.marker([h.lat,h.lng],{icon}).addTo(mapInstance).bindPopup(popup,{maxWidth:290});
+  });
+}
+
+function renderHotelCards() {
+  const container = document.getElementById('hotel-cards');
+  container.innerHTML = '';
+  hotels.forEach(h => {
+    const avg = (Object.values(h.ratings).reduce((a,b)=>a+b,0)/4).toFixed(1);
+    const departed = isDeparted(h);
+    const cls = departed ? 'closed' : (h.approved ? (parseFloat(avg) >= 4 ? 'approved' : 'partial') : 'excluded');
+    const hotelPilgrimsCount = (() => {
+      const hMissions = missions.filter(m => m.hotelName === h.name).map(m => m.id);
+      return pilgrims.filter(p => hMissions.includes(p.missionId)).length;
+    })();
+    const badgeCls = h.approved ? 'badge-approved' : 'badge-excluded';
+    const ratingRows = [
+      ['تعاون الموظفين', h.ratings.staff],
+      ['سهولة الوصول',   h.ratings.access],
+      ['سرعة الاستجابة', h.ratings.response],
+      ['الحفاظ على الجاهزية', h.ratings.readiness],
+    ].map(([lbl,val]) => `
+      <div class="rating-item">
+        <div class="rating-name">${lbl}</div>
+        <div class="rating-bar-bg"><div class="rating-bar-fill" style="width:${val*20}%;background:${ratingColor(val)};"></div></div>
+        <div class="rating-score">${val}</div>
+      </div>`).join('');
+
+    const v1cls = h.visit1Result.includes('مطابق') && !h.visit1Result.includes('غير') ? 'ok' : 'bad';
+    const v2cls = h.visit2Result === 'مطابق' ? 'ok' : (h.visit2Result === '—' ? '' : 'bad');
+
+    container.innerHTML += `
+      <div class="hotel-card ${cls} clickable-card" onclick="openModalHotel('${h.name}')">
+        <div class="hotel-name">${h.name}</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+          <span class="hotel-badge ${badgeCls}" style="margin-bottom:0;">${h.finalResult}</span>
+          ${isOccupiedNow(h) ? '<span style="font-size:10px;background:#e3f2fd;color:#0d47a1;padding:2px 9px;border-radius:99px;font-weight:600;">فيه حجاج الآن</span>' : ''}
+          ${departed ? '<span style="font-size:10px;background:#e2e8f0;color:#334155;padding:2px 9px;border-radius:99px;font-weight:600;">✓ تم مغادرة الحجاج</span>' : ''}
+        </div>
+        <div class="hotel-row"><span class="hotel-row-label">الجنسيات</span><span class="hotel-row-val">${h.nationalities}</span></div>
+        <div class="hotel-row"><span class="hotel-row-label">عدد الحجاج المقيمين</span><span class="hotel-row-val" style="color:var(--blue-mid);font-weight:700;">${hotelPilgrimsCount ? hotelPilgrimsCount.toLocaleString('ar-EG')+' حاج' : '—'}</span></div>
+        <div class="hotel-row"><span class="hotel-row-label">وصول الحجاج</span><span class="hotel-row-val">${arDate(h.arrivalDate)}</span></div>
+        <div class="hotel-row"><span class="hotel-row-label">أيام الإقامة</span><span class="hotel-row-val">${h.stayDays ? h.stayDays+' يوم' : '—'}</span></div>
+        <div class="hotel-row"><span class="hotel-row-label">نتيجة الزيارة الأولى</span><span class="hotel-row-val ${v1cls}">${h.visit1Result}</span></div>
+        <div class="hotel-row"><span class="hotel-row-label">نتيجة الزيارة الثانية</span><span class="hotel-row-val ${v2cls}">${h.visit2Result}</span></div>
+        <div class="hotel-row"><span class="hotel-row-label">تاريخ الإغلاق</span><span class="hotel-row-val">${arDate(h.closingDate)}</span></div>
+        <a href="https://www.google.com/maps?q=${h.lat},${h.lng}" target="_blank"
+           style="display:flex;align-items:center;gap:6px;margin:10px 0 6px;font-size:11px;color:var(--blue-mid);text-decoration:none;padding:6px 10px;border:0.5px solid #bfdbfe;border-radius:var(--radius-sm);background:#eff6ff;width:fit-content;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          فتح الموقع في خرائط جوجل
+        </a>
+        <div class="click-hint"><svg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'/><line x1='12' y1='8' x2='12' y2='12'/><line x1='12' y1='16' x2='12.01' y2='16'/></svg>اضغط لعرض قائمة الحجاج</div>
+        <div class="rating-section">
+          <div class="rating-label">تقييم الخدمات (متوسط: ${avg}/5)</div>
+          ${ratingRows}
+        </div>
+      </div>`;
+  });
+}
+
+// ═══════════════════════════════
+// ALERTS
+// ═══════════════════════════════
+function renderAlerts() {
+  const today = getToday();
+  const counts = {overdue:0, warn:0, upcoming:0, ok:0};
+  const cards = [];
+
+  hotels.forEach(h => {
+    if (!h.approved) return;
+    h.visits.forEach(v => {
+      const sched = v.scheduled ? (() => { const d=new Date(v.scheduled); d.setHours(0,0,0,0); return d; })() : null;
+      if (!sched) return;
+      const diff = diffDays(today, sched);
+      const done = !!v.actual;
+      let state, bText;
+
+      if (done) {
+        state = 'done'; bText = 'منجزة'; counts.ok++;
+      } else if (diff < 0) {
+        state = 'overdue'; bText = 'متأخرة'; counts.overdue++;
+      } else if (diff <= 1) {
+        state = 'warn'; bText = diff===0?'اليوم':'غداً'; counts.warn++;
+      } else if (diff <= 3) {
+        state = 'upcoming'; bText = 'قريباً'; counts.upcoming++;
+      } else {
+        state = 'sched'; bText = 'مجدولة'; counts.ok++;
+      }
+      cards.push({ h, v, sched, diff, done, state, bText });
+    });
+  });
+
+  const order = {overdue:0,warn:1,upcoming:2,sched:3,done:4};
+  cards.sort((a,b) => {
+    const d = order[a.state]-order[b.state];
+    if (d!==0) return d;
+    return (b.v.critical?1:0)-(a.v.critical?1:0);
+  });
+
+  // chips
+  document.getElementById('alert-chips').innerHTML = `
+    <div class="a-chip chip-r"><span class="n">${counts.overdue}</span> متأخرة</div>
+    <div class="a-chip chip-a"><span class="n">${counts.warn}</span> اليوم / غداً</div>
+    <div class="a-chip chip-b"><span class="n">${counts.upcoming}</span> قريباً</div>
+    <div class="a-chip chip-g"><span class="n">${counts.ok}</span> منجزة / مجدولة</div>`;
+
+  const stateMap = {
+    overdue:  { cls:'overdue',  iCls:'icon-overdue',  iChar:'!', bCls:'badge-red',   pCls:'pill-red'    },
+    warn:     { cls:'warn',     iCls:'icon-warn',     iChar:'⚑', bCls:'badge-amber', pCls:'pill-amber'  },
+    upcoming: { cls:'upcoming', iCls:'icon-upcoming', iChar:'◷', bCls:'badge-blue',  pCls:'pill-blue'   },
+    done:     { cls:'done',     iCls:'icon-done',     iChar:'✓', bCls:'badge-green', pCls:'pill-green'  },
+    sched:    { cls:'sched',    iCls:'icon-sched',    iChar:'◷', bCls:'badge-gray',  pCls:'pill-gray'   },
+  };
+
+  const list = document.getElementById('alerts-list');
+  list.innerHTML = '';
+  cards.forEach(c => {
+    const sm = stateMap[c.state];
+    const critCls = c.v.critical ? ' critical-left' : '';
+    let statusText = '';
+    if (c.done) statusText = 'تمت ' + arDate(c.v.actual);
+    else if (c.diff < 0) statusText = 'تأخرت ' + Math.abs(c.diff) + ' يوم';
+    else if (c.diff === 0) statusText = 'اليوم موعد الزيارة';
+    else if (c.diff === 1) statusText = 'غداً موعد الزيارة';
+    else statusText = 'بعد ' + c.diff + ' يوم';
+
+    const extraPills = [];
+    if (!c.done && c.diff < 0) extraPills.push(`<span class="pill pill-red">لم يُدخل تاريخ الزيارة الفعلي</span>`);
+    if (!c.done && (c.diff===0||c.diff===1) && c.v.critical)
+      extraPills.push(`<span class="pill pill-purple">تنبيه: زيارة إلزامية ${c.diff===0?'اليوم':'غداً'}</span>`);
+
+    const critTag = c.v.critical ? `<span class="crit-tag">إغلاق / دورية</span>` : `<span style="font-size:9px;background:var(--gray-100);color:var(--gray-400);padding:1px 5px;border-radius:99px;">أولى / ثانية</span>`;
+
+    list.innerHTML += `
+      <div class="alert-item ${sm.cls}${critCls}">
+        <div class="alert-icon ${sm.iCls}">${sm.iChar}</div>
+        <div class="alert-body">
+          <div class="alert-hotel">${c.h.name}</div>
+          <div class="alert-visit">${c.v.label} ${critTag} <span style="color:var(--text-muted);font-size:10px;">وفق اللائحة: ${arDate(c.v.scheduled)}</span></div>
+          <div class="alert-pills">
+            <span class="pill ${sm.pCls}">${statusText}</span>
+            ${extraPills.join('')}
+          </div>
+        </div>
+        <span class="alert-badge ${sm.bCls}">${c.bText}</span>
+      </div>`;
+  });
+}
+
+// ═══════════════════════════════
+// SIM
+// ═══════════════════════════════
+function simChanged(v) { simDateStr = v || null; document.getElementById('sim-note').textContent = v ? '(محاكاة مفعّلة)' : ''; renderAlerts(); renderMap(); applyFilters(); renderMissions(); }
+function resetSim() { simDateStr=null; document.getElementById('sim-date').value=''; document.getElementById('sim-note').textContent=''; renderAlerts(); renderMap(); applyFilters(); renderMissions(); }
+
+// ═══════════════════════════════
+// CHARTS
+// ═══════════════════════════════
+function renderCharts() {
+  new Chart(document.getElementById('avgChart'), {
+    type: 'bar',
+    data: {
+      labels: hotels.map(h => h.name),
+      datasets: [{
+        label: 'متوسط التقييم',
+        data: hotels.map(h => +(Object.values(h.ratings).reduce((a,b)=>a+b,0)/4).toFixed(2)),
+        backgroundColor: hotels.map(h => h.approved ? (Object.values(h.ratings).reduce((a,b)=>a+b,0)/4 >= 4 ? '#2d7a35' : '#f59e0b') : '#c62828'),
+        borderRadius: 5,
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins: { legend:{display:false} },
+      scales: {
+        y: { min:0, max:5, ticks:{font:{size:11},color:'#9ca3af'}, grid:{color:'#f3f4f6'} },
+        x: { ticks:{font:{size:10},color:'#4b5563'}, grid:{display:false} }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('pieChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['مطابق','غير مطابق / مستبعد'],
+      datasets: [{ data:[4,2], backgroundColor:['#2d7a35','#c62828'], borderWidth:0 }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false} },
+      cutout:'58%'
+    }
+  });
+}
+
+// ═══════════════════════════════
+// TIMELINE
+// ═══════════════════════════════
+function renderTimeline() {
+  const minD=7, maxD=40, total=maxD-minD;
+  const rows = [
+    { name:'إيلاف طيبة',   visitDay:8,  stayStart:20, stayEnd:35, excluded:false },
+    { name:'راما مدينة',   visitDay:9,  stayStart:22, stayEnd:39, excluded:false },
+    { name:'لؤلؤة المدينة',visitDay:9,  stayStart:null,stayEnd:null,excluded:true },
+  ];
+  const cont = document.getElementById('timeline-rows');
+  cont.innerHTML = '';
+  rows.forEach(r => {
+    const row = document.createElement('div');
+    row.className = 'tl-row';
+    row.innerHTML = `<div class="tl-hotel">${r.name}</div><div class="tl-area" id="ta-${r.name}"></div>`;
+    cont.appendChild(row);
+    const area = row.querySelector('.tl-area');
+
+    const vl = ((r.visitDay-minD)/total*100).toFixed(1);
+    const vBar = document.createElement('div');
+    vBar.className = 'tl-bar';
+    vBar.style.cssText = `left:${vl}%;width:5%;background:#1565c0;`;
+    vBar.textContent = 'زيارة';
+    area.appendChild(vBar);
+
+    if (!r.excluded && r.stayStart) {
+      const sl = ((r.stayStart-minD)/total*100).toFixed(1);
+      const sw = ((r.stayEnd-r.stayStart)/total*100).toFixed(1);
+      const sBar = document.createElement('div');
+      sBar.className = 'tl-bar';
+      sBar.style.cssText = `left:${sl}%;width:${sw}%;background:#2d7a35;opacity:.85;`;
+      sBar.textContent = 'إقامة';
+      area.appendChild(sBar);
+    } else if (r.excluded) {
+      const eBar = document.createElement('div');
+      eBar.className = 'tl-bar';
+      eBar.style.cssText = `left:${vl}%;width:22%;background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;`;
+      eBar.textContent = 'مستبعد';
+      area.appendChild(eBar);
+    }
+  });
+}
+
+// ═══════════════════════════════
+// MAP
+// ═══════════════════════════════
+
+
+let mapInstance = null;
+function renderMap() {
+  if (!mapInstance) {
+    mapInstance = L.map('map',{zoomControl:true,attributionControl:true}).setView([24.4665,39.6065],17);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19,
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics'
+    }).addTo(mapInstance);
+  } else {
+    mapInstance.eachLayer(l => { if (!(l instanceof L.TileLayer)) mapInstance.removeLayer(l); });
+  }
+
+  const today = getToday();
+
+  hotels.forEach(h => {
+    const color    = h.approved ? '#2d7a35' : '#c62828';
+    const bgLight  = h.approved ? '#e8f5e9' : '#ffebee';
+    const textDark = h.approved ? '#1b5e20' : '#7f1d1d';
+    const next = getNextVisit(h);
+    let nextDiff = null;
+    if (next) { const nd=new Date(next.scheduled); nd.setHours(0,0,0,0); nextDiff=diffDays(today,nd); }
+
+    const warn = next && nextDiff !== null && nextDiff <= 1 && !next.actual;
+    const warnBadge = warn ? `<circle cx="26" cy="6" r="6" fill="#f59e0b" stroke="white" stroke-width="1.5"/><text x="26" y="10.5" text-anchor="middle" font-size="10" fill="white" font-weight="bold">!</text>` : '';
+
+    const markerSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="34" height="44" viewBox="0 0 34 44">
+      <ellipse cx="17" cy="42" rx="5" ry="2" fill="rgba(0,0,0,0.2)"/>
+      <path d="M17 2C8.7 2 2 8.7 2 17c0 10 15 27 15 27s15-17 15-27C32 8.7 25.3 2 17 2Z" fill="${color}" stroke="white" stroke-width="2"/>
+      <circle cx="17" cy="17" r="7" fill="white" opacity="0.92"/>
+      <text x="17" y="21" text-anchor="middle" font-size="11" font-weight="bold" fill="${color}" font-family="Arial">${h.approved?'✓':'✕'}</text>
+      ${warnBadge}
+    </svg>`;
+
+    const icon = L.divIcon({ html:markerSvg, iconSize:[34,44], iconAnchor:[17,44], popupAnchor:[0,-44], className:'' });
+
+    // next visit block
+    let nextBlock = '';
+    if (next) {
+      const nd = new Date(next.scheduled); nd.setHours(0,0,0,0);
+      const d2 = diffDays(today, nd);
+      const nc = d2<0?'#c62828': d2<=1?'#f59e0b': d2<=3?'#1565c0':'#2d7a35';
+      const nl = d2<0?'تأخرت '+Math.abs(d2)+' يوم': d2===0?'اليوم': d2===1?'غداً':'بعد '+d2+' يوم';
+      nextBlock = `<div style="background:${nc}18;border:1px solid ${nc}44;border-radius:8px;padding:7px 9px;margin-bottom:7px;">
+        <div style="font-size:10px;color:#666;margin-bottom:2px;">أقرب زيارة قادمة</div>
+        <div style="font-size:12px;font-weight:700;color:${nc};">${next.label}</div>
+        <div style="font-size:10px;color:#444;">${arDate(next.scheduled)} — ${nl}</div>
+      </div>`;
+    } else {
+      nextBlock = `<div style="background:#f5f5f5;border-radius:8px;padding:7px 9px;margin-bottom:7px;font-size:11px;color:#999;">لا توجد زيارات قادمة</div>`;
+    }
+
+    const popup = `<div style="direction:rtl;font-family:Arial,sans-serif;min-width:230px;max-width:270px;">
+      <div style="background:${bgLight};border-radius:8px 8px 0 0;padding:9px 11px;border-bottom:1px solid ${color}44;margin:-12px -20px 10px;">
+        <div style="font-size:14px;font-weight:700;color:${textDark};">${h.name}</div>
+        <span style="font-size:10px;background:${color};color:white;padding:2px 8px;border-radius:99px;margin-top:4px;display:inline-block;">${h.finalResult}</span>
+      </div>
+      ${nextBlock}
+      <table style="width:100%;font-size:11px;border-collapse:collapse;">
+        <tr><td style="color:#888;padding:3px 0;border-bottom:1px solid #eee;">الجنسيات</td><td style="text-align:left;font-weight:600;color:#222;">${h.nationalities}</td></tr>
+        <tr><td style="color:#888;padding:3px 0;border-bottom:1px solid #eee;">عدد الزوار</td><td style="text-align:left;font-weight:700;color:#1565c0;">${h.pilgrims ? h.pilgrims.toLocaleString('ar-EG')+' حاج' : '—'}</td></tr>
+        <tr><td style="color:#888;padding:3px 0;border-bottom:1px solid #eee;">وصول الحجاج</td><td style="text-align:left;font-weight:600;color:#222;">${arDate(h.arrivalDate)}</td></tr>
+        <tr><td style="color:#888;padding:3px 0;">تاريخ الإغلاق</td><td style="text-align:left;font-weight:600;color:#222;">${arDate(h.closingDate)}</td></tr>
+      </table>
+    </div>`;
+
+    L.marker([h.lat,h.lng],{icon}).addTo(mapInstance).bindPopup(popup,{maxWidth:290});
+  });
+
+  const bounds = hotels.map(h=>[h.lat,h.lng]);
+  mapInstance.fitBounds(bounds,{padding:[50,50]});
+}
+
+// ═══════════════════════════════
+// CLOCK
+// ═══════════════════════════════
+function updateClock() {
+  const now = new Date();
+  document.getElementById('hdr-clock').textContent =
+    [now.getHours(),now.getMinutes(),now.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
+  document.getElementById('hdr-date').textContent =
+    now.toLocaleDateString('ar-SA-u-ca-gregory',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+
+// ═══════════════════════════════
+// MISSIONS RENDER
+// ═══════════════════════════════
+function renderMissions() {
+  const today = getToday();
+  const counts = { critical:0, tomorrow:0, soon:0, arrived:0, future:0 };
+  const items = [];
+
+  missions.forEach(m => {
+    const hotel = getHotelForMission(m);
+    const hotelOk = hotel ? hotel.approved : false;
+    const sched = new Date(m.scheduledDate); sched.setHours(0,0,0,0);
+    const hasActual = !!m.actualDate;
+    const diff = diffDays(today, sched);
+
+    let state, bText, bCls, iChar, iColor, iCls;
+
+    if (hasActual && diff < 0) {
+      state = 'arrived'; bText = 'وصلت'; bCls = 'mb-arrived';
+      iChar = '✓'; iColor = '#bbf7d0'; iCls = '#14532d';
+      counts.arrived++;
+    } else if (diff < 0) {
+      state = 'arrived'; bText = 'وصلت'; bCls = 'mb-arrived';
+      iChar = '✓'; iColor = '#bbf7d0'; iCls = '#14532d';
+      counts.arrived++;
+    } else if (diff === 0) {
+      state = 'critical'; bText = 'اليوم'; bCls = 'mb-critical';
+      iChar = '!'; iColor = '#fed7aa'; iCls = '#7c2d12';
+      counts.critical++;
+    } else if (diff === 1) {
+      state = 'critical'; bText = 'غداً'; bCls = 'mb-critical';
+      iChar = '⚑'; iColor = '#fed7aa'; iCls = '#7c2d12';
+      counts.critical++;
+    } else if (diff === 2) {
+      state = 'tomorrow'; bText = 'بعد يومين'; bCls = 'mb-tomorrow';
+      iChar = '⚑'; iColor = '#fde68a'; iCls = '#78350f';
+      counts.tomorrow++;
+    } else if (diff <= 5) {
+      state = 'soon'; bText = 'بعد '+diff+' أيام'; bCls = 'mb-soon';
+      iChar = '◷'; iColor = '#bfdbfe'; iCls = '#1e3a5f';
+      counts.soon++;
+    } else {
+      state = 'future'; bText = 'بعد '+diff+' يوم'; bCls = 'mb-future';
+      iChar = '◷'; iColor = '#e5e7eb'; iCls = '#4b5563';
+      counts.future++;
+    }
+
+    items.push({ m, hotel, hotelOk, diff, state, bText, bCls, iChar, iColor, iCls, hasActual });
+  });
+
+  const order = { critical:0, tomorrow:1, soon:2, arrived:3, future:4 };
+  items.sort((a,b) => order[a.state]-order[b.state]);
+
+  // chips
+  document.getElementById('mission-chips').innerHTML =
+    '<div class="a-chip" style="background:#fff7ed;color:#7c2d12;"><span class="n">'+counts.critical+'</span> اليوم / غداً</div>' +
+    '<div class="a-chip" style="background:#fefce8;color:#78350f;"><span class="n">'+counts.tomorrow+'</span> بعد يومين</div>' +
+    '<div class="a-chip" style="background:#eff6ff;color:#1e3a5f;"><span class="n">'+counts.soon+'</span> قريباً</div>' +
+    '<div class="a-chip chip-g"><span class="n">'+counts.arrived+'</span> وصلت</div>' +
+    '<div class="a-chip chip-r" style="opacity:.6"><span class="n">'+counts.future+'</span> مجدولة</div>';
+
+  const list = document.getElementById('missions-list');
+  list.innerHTML = '';
+
+  items.forEach(c => {
+    const hotelBorderCls = c.hotelOk ? 'hotel-ok' : 'hotel-bad';
+    const hotelBanner = c.hotel
+      ? '<span class="hotel-status-banner '+(c.hotelOk?'hsb-ok':'hsb-bad')+'">'
+        +(c.hotelOk?'✓':'✕')+' '+c.hotel.name+' '+(c.hotelOk?'معتمد':'غير معتمد')+'</span>'
+      : '<span class="hotel-status-banner hsb-bad">✕ الفندق غير موجود</span>';
+
+    const pills = [];
+    pills.push('<span class="m-pill mp-blue">'+c.m.arrival+'</span>');
+    pills.push('<span class="m-pill mp-purple">'+c.m.nationality+'</span>');
+    pills.push('<span class="m-pill mp-gray">'+c.m.count+' فرد</span>');
+    pills.push('<span class="m-pill mp-gray">'+c.m.stayDays+' يوم إقامة</span>');
+
+    if (!c.hotelOk && c.diff >= 0) {
+      pills.push('<span class="m-pill mp-red">تحذير: الفندق غير معتمد قبل الوصول</span>');
+    }
+    if (c.diff === 1) {
+      pills.push('<span class="m-pill mp-orange">القدوم غداً — تأكد من جاهزية الفندق</span>');
+    }
+    if (c.diff === 0) {
+      pills.push('<span class="m-pill mp-orange">البعثة تصل اليوم</span>');
+    }
+    if (c.diff === 2) {
+      pills.push('<span class="m-pill mp-amber">بعد يومين — راجع التنسيق</span>');
+    }
+    if (c.hasActual && c.diff < 0) {
+      pills.push('<span class="m-pill mp-green">تم تسجيل تاريخ وصول فعلي</span>');
+    }
+
+    const diffLabel = c.diff < 0 ? 'وصلت منذ '+Math.abs(c.diff)+' يوم'
+      : c.diff === 0 ? 'اليوم' : c.diff === 1 ? 'غداً' : 'بعد '+c.diff+' يوم';
+
+    list.innerHTML +=
+      '<div class="mission-alert '+c.state+' '+hotelBorderCls+' clickable-card" onclick="openModalMission('+c.m.id+')">' +
+        '<div class="m-icon" style="background:'+c.iColor+';color:'+c.iCls+';">'+c.iChar+'</div>' +
+        '<div class="m-body">' +
+          '<div class="m-name">'+c.m.name+'</div>' +
+          '<div class="m-meta">'+hotelBanner+
+            '<span style="font-size:10px;color:var(--text-muted);">القدوم وفق الجدول: '+arDate(c.m.scheduledDate)+' ('+diffLabel+')</span>'+
+          '</div>' +
+          '<div class="m-pills">'+pills.join('')+'</div>' +
+        '</div>' +
+        '<span class="m-badge '+c.bCls+'">'+c.bText+'</span>' +
+      '</div>';
+  });
+}
+
+// ═══════════════════════════════
+// MODAL
+// ═══════════════════════════════
+let currentPilgrimsShown = [];
+
+function openModal(title, sub, pilgrList) {
+  currentPilgrimsShown = pilgrList;
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-sub').textContent = sub;
+  document.getElementById('modal-search').value = '';
+  document.getElementById('pilgrim-modal').classList.add('open');
+  renderPilgrimTable(pilgrList);
+}
+
+function closeModal() {
+  document.getElementById('pilgrim-modal').classList.remove('open');
+}
+
+function renderPilgrimTable(list) {
+  const tbody = document.getElementById('pilgrim-tbody');
+  const empty = document.getElementById('modal-empty');
+  if (!list.length) { tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display = 'none';
+  tbody.innerHTML = list.map((p,i) =>
+    '<tr>' +
+    '<td class="pilgrim-num">'+(i+1)+'</td>' +
+    '<td style="font-weight:500;">'+p.name+'</td>' +
+    '<td><span class="nat-badge">'+p.nationality+'</span></td>' +
+    '<td style="font-family:monospace;font-size:11px;color:var(--blue-mid);">'+p.passport+'</td>' +
+    '<td style="color:var(--text-secondary);">'+p.missionName+'</td>' +
+    '</tr>'
+  ).join('');
+}
+
+function filterPilgrims() {
+  const q = document.getElementById('modal-search').value.toLowerCase();
+  const filtered = currentPilgrimsShown.filter(p =>
+    p.name.toLowerCase().includes(q) || p.passport.toLowerCase().includes(q)
+  );
+  renderPilgrimTable(filtered);
+}
+
+function openModalAll() {
+  openModal('قائمة جميع الحجاج المسجلين', pilgrims.length+' حاج — '+missions.length+' بعثة', pilgrims);
+}
+
+function openModalHotel(hotelName) {
+  const hotelMissions = missions.filter(m => m.hotelName === hotelName).map(m => m.id);
+  const list = pilgrims.filter(p => hotelMissions.includes(p.missionId));
+  const hotel = hotels.find(h => h.name === hotelName);
+  openModal('حجاج '+hotelName, list.length+' حاج مسجل', list);
+}
+
+function openModalMission(missionId) {
+  const m = missions.find(x => x.id === missionId);
+  const list = pilgrims.filter(p => p.missionId === missionId);
+  openModal('حجاج '+m.name, list.length+' حاج — '+m.nationality+' — '+m.arrival, list);
+}
+
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
+
+// ═══════════════════════════════
+// NATIONALITY & MISSION CHARTS
+// ═══════════════════════════════
+function renderNatCharts() {
+  const missionCounts = missions.map(m => pilgrims.filter(p => p.missionId === m.id).length);
+  new Chart(document.getElementById('missionChart'), {
+    type: 'bar',
+    data: {
+      labels: missions.map(m => m.name),
+      datasets: [{
+        label: 'عدد الحجاج',
+        data: missionCounts,
+        backgroundColor: ['#2d7a35','#1565c0','#7b1fa2'],
+        borderRadius: 6,
+        hoverBackgroundColor: ['#1a5c22','#0d47a1','#4a148c']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ' ' + ctx.parsed.y + ' حاج' } }
+      },
+      scales: {
+        y: { beginAtZero: true, ticks: { font: { size: 11 }, color: '#9ca3af' }, grid: { color: '#f3f4f6' } },
+        x: { ticks: { font: { size: 12 }, color: '#4b5563' }, grid: { display: false } }
+      },
+      onClick: (evt, elements) => {
+        if (!elements.length) return;
+        showActionMenu(evt, missions[elements[0].index].id);
+      },
+      onHover: (evt, elements) => {
+        evt.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════
+// ACTION MENU
+// ═══════════════════════════════
+function showActionMenu(evt, missionId) {
+  const m = missions.find(x => x.id === missionId);
+  const hotel = getHotelForMission(m);
+  const coord = coordinators.find(c => c.missionId === missionId);
+
+  document.getElementById('action-title').textContent = m.name;
+  document.getElementById('action-sub').textContent = m.nationality + ' — ' + m.count + ' حاج';
+
+  const mapsUrl = hotel ? 'https://www.google.com/maps?q=' + hotel.lat + ',' + hotel.lng : '#';
+  const hotelName = hotel ? hotel.name : 'غير محدد';
+  const pilgrimCount = pilgrims.filter(p => p.missionId === missionId).length;
+
+  const chevron = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>';
+  const extIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+
+  document.getElementById('action-items').innerHTML =
+    '<div class="action-item" onclick="openModalMission(' + missionId + '); closeActionMenu();">' +
+      '<div class="action-icon green">&#128101;</div>' +
+      '<div class="action-body"><div class="action-label">فتح بيانات الحجاج</div><div class="action-desc">' + pilgrimCount + ' حاج مسجل</div></div>' + chevron +
+    '</div>' +
+    '<a class="action-item" href="' + mapsUrl + '" target="_blank" onclick="closeActionMenu();">' +
+      '<div class="action-icon blue">&#128205;</div>' +
+      '<div class="action-body"><div class="action-label">الذهاب إلى موقع الإقامة</div><div class="action-desc">' + hotelName + '</div></div>' + extIcon +
+    '</a>' +
+    (coord
+      ? '<div class="action-item" onclick="showCoordModal(' + missionId + '); closeActionMenu();">' +
+          '<div class="action-icon purple">&#128222;</div>' +
+          '<div class="action-body"><div class="action-label">التواصل مع منسق البعثة</div><div class="action-desc">' + coord.name + '</div></div>' + chevron +
+        '</div>'
+      : '');
+
+  // Position: anchored to clicked bar using native event coordinates
+  const menu = document.getElementById('action-menu');
+  menu.style.display = 'block';
+  document.getElementById('action-overlay').classList.add('open');
+
+  // Fixed positioning uses viewport coordinates directly
+  const canvas = document.getElementById('missionChart');
+  const rect = canvas.getBoundingClientRect();
+
+  let top = rect.bottom + 8;
+  let left = rect.left + (rect.width / 2) - 135;
+  top  = Math.max(10, Math.min(top,  window.innerHeight - 220));
+  left = Math.max(10, Math.min(left, window.innerWidth  - 280));
+
+  menu.style.top  = top  + 'px';
+  menu.style.left = left + 'px';
+}
+
+function closeActionMenu() {
+  document.getElementById('action-menu').style.display = 'none';
+  document.getElementById('action-overlay').classList.remove('open');
+}
+
+function showCoordModal(missionId) {
+  const m = missions.find(x => x.id === missionId);
+  const coord = coordinators.find(c => c.missionId === missionId);
+  if (!coord) return;
+  document.getElementById('coord-modal-title').textContent = 'التواصل مع منسق البعثة';
+  document.getElementById('coord-modal-sub').textContent = m.name + ' — ' + coord.nationality;
+  const initials = coord.name.split(' ').map(w=>w[0]).join('').substring(0,2);
+  document.getElementById('coord-card').innerHTML =
+    '<div class="coord-avatar">' + initials + '</div>' +
+    '<div style="flex:1;">' +
+      '<div class="coord-name">' + coord.name + '</div>' +
+      '<div class="coord-phone-label">رقم الجوال</div>' +
+      '<div class="coord-phone">+966 ' + coord.phone + '</div>' +
+    '</div>';
+  document.getElementById('coord-modal').classList.add('open');
+}
+
+function closeCoordModal() {
+  document.getElementById('coord-modal').classList.remove('open');
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeModal(); closeCoordModal(); closeActionMenu(); }
+});
+
+// ═══════════════════════════════
+// INIT
+
+// ═══════════════════════════════
+renderHotelCards();
+applyFilters();
+renderMissions();
+renderNatCharts();
+renderAlerts();
+renderCharts();
+renderTimeline();
+setTimeout(renderMap, 100);
+updateClock();
+setInterval(updateClock, 1000);
+</script>
+<!-- ACTION MENU -->
+<div class="action-menu-overlay" id="action-overlay" onclick="closeActionMenu()"></div>
+<div class="action-menu" id="action-menu" style="display:none;">
+  <div class="action-menu-header">
+    <div class="action-menu-title" id="action-title"></div>
+    <div class="action-menu-sub" id="action-sub"></div>
+  </div>
+  <div id="action-items"></div>
+</div>
+
+<!-- COORDINATOR MODAL -->
+<div class="modal-overlay" id="coord-modal" onclick="if(event.target===this)closeCoordModal()">
+  <div class="modal-box" style="max-width:400px;">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="coord-modal-title">التواصل مع منسق البعثة</div>
+        <div class="modal-sub" id="coord-modal-sub"></div>
+      </div>
+      <button class="modal-close" onclick="closeCoordModal()">✕</button>
+    </div>
+    <div class="modal-body" style="padding:20px;">
+      <div class="coord-card" id="coord-card"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PILGRIMS MODAL -->
+<div class="modal-overlay" id="pilgrim-modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modal-title">قائمة الحجاج</div>
+        <div class="modal-sub" id="modal-sub"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input class="modal-search" type="text" placeholder="ابحث بالاسم أو رقم الجواز..." id="modal-search" oninput="filterPilgrims()" />
+      <table class="pilgrim-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>الاسم</th>
+            <th>الجنسية</th>
+            <th>رقم الجواز</th>
+            <th>البعثة</th>
+          </tr>
+        </thead>
+        <tbody id="pilgrim-tbody"></tbody>
+      </table>
+      <div id="modal-empty" style="display:none;text-align:center;padding:2rem;color:var(--text-muted);font-size:13px;">لا توجد نتائج</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
